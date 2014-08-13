@@ -147,27 +147,33 @@ namespace overfoerselsindkomster
     const double[] _khTimesats = { 133.4900929, 134.0240532, 137.2406305, 137.6523524, 140.9560089, 144.6208651, 149.2486949, 154.0239743, 158.1827291, 163.2452483, 167.9794322, 171.3390101, 174.7657871, 178.96, 185.94, 195.05, 200.51, 205.52, 209.56, }; //Timesats, hvis ikke timelønnet, talrække starter i 1994
     const int _khMaksTimer = 160;
 
-    int Uddannelseshjælp(Education ig)
+/*    int Uddannelseshjælp(Education ig)
     {
       if (ig == Education.IkkeUnderUddannelse)
         return Kontanthjælp();
       else
         return SU();
-    }
+    }*/
 
-    int SU(Education ig, Boolean hjemmeboende, int alder, int dur, int år, int forældreindkomst)
+    int SU(Education ig, Boolean hjemmeboende, int alder, int dur, int år, int forældreindkomst, int børn, Boolean partnerModtagerSU, Boolean enlig)
     {
-      if (alder < 18) //skal være over 18 år for at modtage SU
+      if (alder < 18 || ig == Education.IkkeUnderUddannelse) //skal være over 18 år og igang med en uddannelse for at modtage SU
         return 0;
 
+      Boolean startetEfter2013;
+      if (dur >= år - 2013) //startet på uddannelse efter 2013
+        startetEfter2013 = true;
+      else
+        startetEfter2013 = false;
+
+
       int su;
-      int sats;
       if (ig > Education.TiendeKlasse && ig <= Education.ErhFag) //Ungdomsuddannelse
       {
         int grundsats;
         if (alder < 20)
         {
-          if (dur >= år - 2013) //startet på uddannelse efter 2013
+          if (startetEfter2013) //startet på uddannelse efter 2013
             grundsats = 906; //hvis du starter på en ny uddannelse  den 1. juli 2014 eller senere...
           else
             grundsats = 1293;
@@ -175,29 +181,41 @@ namespace overfoerselsindkomster
           int tillæg;
           //forældreindkomst fratræk evt. søskendefradrag....
           if (forældreindkomst < 320000) //antager at personen er startet uddannelsen i 2014 el. senere
-            tillæg = 2516;
-          else if (forældreindkomst > 680000)
-            tillæg = 906;
-          else
-          {
-            tillæg = 911 + (2512 - 911) * (680000 - forældreindkomst) / (680000 - 320000); //tillæg beregnes efter forældre indkomst
-          }
-          su = grundsats + tillæg;
+              tillæg = 1610;
+            else if (forældreindkomst > 680000)
+              tillæg = 0;
+            else
+            {
+              tillæg = 1610 * (680000 - forældreindkomst) / (680000 - 320000); //tillæg beregnes efter forældre indkomst
+            }
+
+            su = grundsats + tillæg;
         }
         else //20 år eller over
         {
           if (hjemmeboende)
-            su = 2516; //hvis du starter på en ny udannelse den 1. juli 2014 eller senere...
-          else
-            su = 5839; //uanset start på udannelsen
+            if (startetEfter2013)
+              su = 2516; //hvis du starter på en ny udannelse den 1. juli 2014 eller senere...
+            else
+              su = 2903;
+          else //udeboende
+              su = 5839; //uanset start på udannelsen
+
+          if (børn > 0 && enlig)
+            su += 5839; //tillægsstipendium
+          else if (børn > 0 && partnerModtagerSU)
+            su += 2332; //tillægsstipendium
         }
       }
 
       return su;
 
       //Ikke implementeret:
+      //Sammenhæng til indtægt - fribeløb mv.
       //Forælder under 20 år på ungdomsuddannelse
+      //Handicatillæg
       //Satser (før skat) til udeboende med særlig godkendelse - fordi at "Når du er under 20 år og går på en ungdomsuddannelse, kan du normalt kun få SU med satsen for hjemmeboende - også selv om du er flyttet hjemmefra"
+      //SU-lån
     }
 
     int Kontanthjælp(Boolean formue, int alder, int børn, int arbejdsindkomst, int arbejdstimer, int andenIndkomst, Boolean gift, Boolean udeboende, Boolean formue, Boolean ægtefælleSU, int mdrbopæl, Education uddannelse, int år, int bundfradrag, double aftrapningsprocent, int ægtefælleAlder, int ægtefælleArbejdsindkomst, int ægtefælleArbejdstimer, int ægtefælleAndenIndkomst, Boolean ægtefælleKontanthjælp, Education ig = Education.IkkeUnderUddannelse)
