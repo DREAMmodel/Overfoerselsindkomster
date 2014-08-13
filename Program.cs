@@ -218,7 +218,7 @@ namespace overfoerselsindkomster
       //SU-lån
     }
 
-    int Kontanthjælp(Boolean formue, int alder, int børn, int arbejdsindkomst, int arbejdstimer, int andenIndkomst, Boolean gift, Boolean udeboende, Boolean formue, Boolean ægtefælleSU, int mdrbopæl, Education uddannelse, int år, int bundfradrag, double aftrapningsprocent, int ægtefælleAlder, int ægtefælleArbejdsindkomst, int ægtefælleArbejdstimer, int ægtefælleAndenIndkomst, Boolean ægtefælleKontanthjælp, Education ig = Education.IkkeUnderUddannelse)
+    int Kontanthjælp(Boolean formue, int alder, int børn, int dur, int forældreindkomst, int arbejdsindkomst, Boolean partnerModtagerSU, int arbejdstimer, int andenIndkomst, Boolean enlig, Boolean udeboende, Boolean formue, Boolean ægtefælleSU, int mdrbopæl, Education uddannelse, int år, int bundfradrag, double aftrapningsprocent, int ægtefælleAlder, int ægtefælleArbejdsindkomst, int ægtefælleArbejdstimer, int ægtefælleAndenIndkomst, Boolean ægtefælleKontanthjælp, Education ig = Education.IkkeUnderUddannelse)
     {
       if (formue) //hvis formue, friværdi eller høj løn hos partner, så ingen kontanthjælp
         return 0;
@@ -228,14 +228,14 @@ namespace overfoerselsindkomster
       {
         //Uddannelseshjælp
         if (ig != Education.IkkeUnderUddannelse) //ikke uddannelsesparate får ydelse svarende til kontanthjælp
-          return SU(ig); //...øvrige får uddannelseshjælp svarende til SU
+          return SU(ig, !udeboende, alder, dur, år, forældreindkomst, børn, partnerModtagerSU, enlig); //...øvrige får uddannelseshjælp svarende til SU
       }
       else if (alder < 30 && uddannelse >= Education.ErhFag && år >= 2014)
       {
         //Unge under 30 år med uddannelse modtager fortsat kontanthjælp, men på niveau med SU. 
         Boolean aktivitetspålæg = false;
         if (!aktivitetspålæg) //I de perioder, hvor de unge med uddannelse deltager i aktive tilbud, får de et aktivitetspålæg, så de fastholder en samlet ydelse, der svarer til den nuværende kontanthjælpssats.
-          return SU(); 
+          return SU(ig, !udeboende, alder, dur, år, forældreindkomst, børn, partnerModtagerSU, enlig); 
       }
      
       //if (år == 2014)
@@ -254,7 +254,7 @@ namespace overfoerselsindkomster
       {
         if (børn > 0) //forsøger under 30 år
         {
-          if (!gift) //Enlige forsørgere, under 30 år
+          if (enlig) //Enlige forsørgere, under 30 år
             sats = 13575;
           else if (ægtefælleKontanthjælp || ægtefælleSU)
             sats = 9498; //Forsørgere under 30 år, gift/bor med person på SU, uddhj. eller kontanthj.
@@ -285,7 +285,7 @@ namespace overfoerselsindkomster
       else
         arbejdstimer = Math.Min(arbejdstimer, _khMaksTimer);
 
-      if (gift)
+      if (!enlig)
       {
         if (ægtefælleArbejdstimer == 0)
           ægtefælleArbejdstimer = Math.Min(Convert.ToInt32(Convert.ToDouble(ægtefælleArbejdsindkomst) / _khTimesats[år - 1994] * (1 - _skatArbejdsmarkedsbidragssats[år - 1994])), _khMaksTimer); //beregning af arbejdstimer udfra arbejdsindtægt
@@ -300,7 +300,29 @@ namespace overfoerselsindkomster
       return kontanthjælp;
     }
 
+    int børneUngeYdelse(int barnetsAlder, int forsøger1Indkomst, int forsøger2Indkomst)
+    {
+      if (barnetsAlder >= 18)
+        return 0; //kun børn kan modtage ydelsen
 
+      int aftrapning = Convert.ToInt32(Math.Max(0, 0.02 * (forsøger1Indkomst - 712600))) + Convert.ToInt32(Math.Max(0, 0.02 * (forsøger2Indkomst - 712600))); //For par, der er gift, opgøres aftrapningsgrundlaget som summen af den del af hver ægtefælles topskattegrundlag, der overstiger 712.600 kr.
+
+      int ydelse;
+      if (barnetsAlder > 15)
+        ydelse = 915;
+      else if (barnetsAlder > 7)
+        ydelse = 2745/3;
+      else if (barnetsAlder > 3)
+        ydelse = 3486 / 3;
+      else
+        ydelse = 4404 / 3;
+
+      return ydelse - aftrapning;
+
+      //Ikke implementeret
+      //Aftrapning af ydelse ved flere børn...
+      //Aftrapning for ikke-gifte par, det antages at par er gift
+    }
 
     /*
 Function børnetilskud( _
