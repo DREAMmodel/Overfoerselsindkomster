@@ -44,8 +44,17 @@ namespace overfoerselsindkomster
       int kontanthjælp = Socialeydelser.Kontanthjælp(formue, alder, børn, dur, forældreindkomst, arbejdsindkomst, partnerModtagerSU, arbejdstimer, andenIndkomst, enlig, udeboende, ægtefælleSU, mdrbopæl, hf, år, bundfradrag, aftrapningsprocent, ægtefælleAlder, ægtefælleArbejdsindkomst, ægtefælleArbejdstimer, ægtefælleAndenIndkomst, ægtefælleKontanthjælp, ig);
       
       Console.WriteLine("Kontanthjælp: " + kontanthjælp + " Kr.");
+      Console.WriteLine("ATP: ???");
+      Console.WriteLine("Boligstøtte: ???");
 
-      Console.WriteLine("Enlig på dagpenge, 1 barn, år 2012"); //test eksempler...
+      int barnetsAlder = 10;
+      int forsøger1Indkomst = kontanthjælp;
+      int børneydelse = Socialeydelser.børneUngeYdelse(barnetsAlder, forsøger1Indkomst, år);
+      Console.WriteLine("Børneydelse: " + børneydelse + "Kr.");
+
+
+
+      Console.WriteLine("Enlig på dagpenge, 1 barn, år 2012"); //Eksempel 2
       Boolean deltidsforsikret = false;
       Boolean akasse = true;
       int ugerBeskæftigetSomLønmodtager = 52; //har arbejdet et år førend
@@ -58,9 +67,9 @@ namespace overfoerselsindkomster
       Console.WriteLine("Boligstøtte: ???");
       Console.WriteLine("ATP: ???");
 
-      int barnetsAlder = 1;
-      int forsøger1Indkomst = dagpenge;
-      int børneydelse = Socialeydelser.børneUngeYdelse(barnetsAlder, forsøger1Indkomst, år);
+      barnetsAlder = 1;
+      forsøger1Indkomst = dagpenge;
+      børneydelse = Socialeydelser.børneUngeYdelse(barnetsAlder, forsøger1Indkomst, år);
       Console.WriteLine("Børneydelse: " + børneydelse + "Kr.");
 
       Console.Read();
