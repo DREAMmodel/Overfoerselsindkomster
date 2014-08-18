@@ -72,6 +72,13 @@ namespace overfoerselsindkomster
       børneydelse = Socialeydelser.børneUngeYdelse(barnetsAlder, forsøger1Indkomst, år);
       Console.WriteLine("Børneydelse: " + børneydelse + "Kr.");
 
+
+      Console.WriteLine("Reelt enlig folkepensionist m. anden indtægt på 175.000"); //Eksempel 2
+
+      int folkepension = Socialeydelser.Folkepension(2012, 66, 45, CivilstandPensionist.ReeltEnlig, 0, 175000);
+      Console.WriteLine("Folkepension: " + folkepension + "Kr.");
+
+
       Console.Read();
     }
   }
