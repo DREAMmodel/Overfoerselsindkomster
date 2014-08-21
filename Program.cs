@@ -10,17 +10,17 @@ namespace overfoerselsindkomster
   class Program
   {
     static void Main(string[] args)
-    {    
+    {
       Console.WriteLine("Eksempel/test-beregninger:");
 
-     int alder = 30;
+      int alder = 30;
       int arbejdsindkomst = 0;
-            int år = 2012;
+      int år = 2012;
       Education hf = Education.ErhFag; //højst fuldførte uddannelse
 
       //Lav eksempel beregninger, evt. svarende til famlietype-modellens familie-modeller...
       Console.WriteLine("Enlig på kontanthjælp, år 2012"); //test eksempler...
-      
+
       Boolean formue = false; //har ingen formue
       int dur = 1;
       int forældreindkomst = 0;
@@ -42,7 +42,7 @@ namespace overfoerselsindkomster
       Education ig = Education.IkkeUnderUddannelse;
 
       int kontanthjælp = Socialeydelser.Kontanthjælp(formue, alder, børn, dur, forældreindkomst, arbejdsindkomst, partnerModtagerSU, arbejdstimer, andenIndkomst, enlig, udeboende, ægtefælleSU, mdrbopæl, hf, år, bundfradrag, aftrapningsprocent, ægtefælleAlder, ægtefælleArbejdsindkomst, ægtefælleArbejdstimer, ægtefælleAndenIndkomst, ægtefælleKontanthjælp, ig);
-      
+
       Console.WriteLine("Kontanthjælp: " + kontanthjælp + " Kr.");
       Console.WriteLine("ATP: ???");
       Console.WriteLine("Boligstøtte: ???");
@@ -81,12 +81,12 @@ namespace overfoerselsindkomster
       Console.WriteLine("\nFolkepensionist gift/samlevende med ikke-pensionist:");
       folkepension = Socialeydelser.Folkepension(2012, 66, 45, CivilstandPensionist.Gift, 0, 175000, 395000);
       Console.WriteLine("Folkepension: " + folkepension + "Kr.");
-      
+
       //Eksempel 5
       Console.WriteLine("\nFolkepensionist gift/samlevende med pensionist:");
       folkepension = Socialeydelser.Folkepension(2012, 66, 45, CivilstandPensionist.Gift, 0, 175000, 125000, true);
       Console.WriteLine("Folkepension: " + folkepension + "Kr.");
-      
+
 
       Console.Read();
     }
