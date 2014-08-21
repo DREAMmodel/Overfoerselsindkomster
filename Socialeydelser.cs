@@ -406,7 +406,7 @@ namespace overfoerselsindkomster
       kontanthjælp -= arbejdsindkomst + ægtefælleArbejdsindkomst; //Dine og din ægtefælles eller samlevers indtægter trækkes fra i hjælpen
       kontanthjælp += arbejdstimer + ægtefælleArbejdstimer * 25; //du bliver tilgodeset med kr. 25,- pr. udført arbejdstime.
 
-      return kontanthjælp;
+      return kontanthjælp + aktivitetstillægBeløb;
     }
 
     public static int børneUngeYdelse(int barnetsAlder, int forsøger1Indkomst, int år, int forsøger2Indkomst = 0)
@@ -440,7 +440,7 @@ namespace overfoerselsindkomster
     /// </summary>
     /// <param name="arbejdstimer">Arbejdstimer pr måned</param>
     /// <returns></returns>
-    public int ATP_indbetaling(int arbejdstimer)
+    public static int ATP_indbetaling(int arbejdstimer)
     {
       //Satser fra http://www.virk.dk/files/live/sites/virk/files/PDF-Filer_og%20Word-dokumenter/ATP_LP/ATP-satser%20offentlige.pdf
       //Antager at personen er månedslønnet
@@ -463,20 +463,86 @@ namespace overfoerselsindkomster
       //Antager at alle hører under A-bidrag
     }
 
-    public int Boligstøtte(int børn, int kvardratmeter, int husleje)
+    /// <summary>
+    /// Hvis par, skal ansøger være folkepensionisten eller førtidspensionisten, hvis en sådan findes
+    /// </summary>
+    /// <param name="børn"></param>
+    /// <param name="kvardratmeter"></param>
+    /// <param name="husleje">Årlig husleje</param>
+    /// <param name="lejer"></param>
+    /// <param name="voksne"></param>
+    /// <param name="husstandsindkomst"></param>
+    /// <param name="husstandsformue"></param>
+    /// <param name="folkepensionist"></param>
+    /// <param name="førtidspensionist"></param>
+    /// <returns></returns>
+    public static int Boligstøtte(int børn, int kvardratmeter, int husleje, Boolean lejer, int voksne, int husstandsindkomst, int husstandsformue, Boolean folkepensionist = false, Boolean førtidspensionist = false)
     {
-      return 0;
+
+      kvardratmeter = Math.Min(kvardratmeter, 65 + 20 * voksne + 20 * børn); //Enlige får boligsikring til en bolig på op til 65 m2. Par uden børn får op til 85 m2. Hvis der er andre personer i husstanden, børn eller andre voksne, lægges der 20 m2 til pr. person.
+ 
+      int ydelse, maxYdelse;
+      if (folkepensionist)
+      { //boligydelse
+        if (børn < 1) //Maksimumbeløb for den husleje, som kan indgå i boligstøtteberegningen afhænger af antal børn
+          husleje = Math.Min(81000, husleje);
+        else if (børn == 1)
+          husleje = Math.Min(85050, husleje);
+        else if (børn == 2)
+          husleje = Math.Min(89100, husleje);
+        else if (børn == 3)
+          husleje = Math.Min(93150, husleje);
+        else //over 3 børn
+          husleje = Math.Min(97200, husleje);
+
+        int indkomstgrænse = børn > 1 ? 144300 + 38000 * Math.Max(0, Math.Min(4, børn - 1)) : 144300; ////Er der mere end 1 barn i husstanden, forhøjes indkomstgrænsen med 38.000 kr. for hvert barn til og med 4 børn.
+        ydelse = Convert.ToInt32(0.75 * (husleje + 6100) - Math.Max(0, 0.225 * (husstandsindkomst - indkomstgrænse))); //Boligydelsen udgør som hovedregel 75 pct. af boligudgiften med et tillæg på 6.100 kr. // Herfra trækkes 22,5 pct. af den del af husstandsindkomsten, der overstiger 144.300 kr. Hvis indtægten er mindre end 144.300 kr., er der ikke noget fradrag for indtægt i boligydelsen.
+
+        ydelse = Convert.ToInt32(Math.Min(ydelse, husleje - Math.Max(15300, 0.11 * husstandsindkomst))); //Der skal altid betales et mindstebeløb af ansøger selv. Dette beløb er på 11 pct. af indkomsten, dog mindst 15.300 kr. om året.
+
+        maxYdelse = børn >= 4 ? 53400 : 42720; //Som udgangspunkt kan den årlige boligydelse højst være på 42.720 kr. årligt. Dette beløb hæves til 53.400 kr., hvis der er tale om, at:....
+        //Det antages at ingen af følgende er opfyldt: Pensionisten har fået anvist en almen bolig af kommunen / – hvis pensionisten er stærkt bevægelseshæmmet, og boligen er egnet / til ansøgers bevægelseshandicap / – pensionisten får døgnhjælp efter servicelovens § 96
+        //Det antages endvidere at der ikke er tale om ældrebolig efter den tidligere ældrelov eller en almen bolig, der er anvist af kommunen, er der intet maksimumsbeløb.
+      } 
+      else if (lejer || førtidspensionist)
+      {
+        if (børn < 1) //Maksimumbeløb for den husleje, som kan indgå i boligstøtteberegningen afhænger af antal børn
+          husleje = Math.Min(74900, husleje);
+        else if (børn == 1)
+          husleje = Math.Min(78645, husleje);
+        else if (børn == 2)
+          husleje = Math.Min(82390, husleje);
+        else if (børn == 3)
+          husleje = Math.Min(86135, husleje);
+        else //over 3 børn
+          husleje = Math.Min(89880, husleje);
+
+        int indkomstgrænse = børn > 1 ? 133500 + 35200 * Math.Max(0, Math.Min(4, børn - 1)) : 133500; //Er der mere end 1 barn i husstanden, forhøjes indkomstgrænsen med 35.200 kr. for hvert barn til og med 4 børn.
+        ydelse = Convert.ToInt32(0.6 * husleje - Math.Max(0, 0.18 * (husstandsindkomst - indkomstgrænse))); //Boligsikring kan som hovedregel udgøre 60 pct. af boligudgiften. Herfra trækkes 18 pct. af den del af husstandsindkomsten, der overstiger 133.500 kr. Hvis indtægten er mindre end 133.500 kr., er der ikke noget fradrag for indtægt i boligsikringen.
+
+        if (børn == 0 && !førtidspensionist)
+          ydelse = Convert.ToInt32(Math.Max(0.15 * husleje, ydelse)); //For husstande uden børn kan boligsikringen som hovedregel højst udgøre 15 pct. af huslejen. Denne regel gælder ikke for førtidspensionister.
+
+        ydelse = Math.Min(ydelse, (husleje - 22500)); //Der skal altid betales et mindstebeløb af ansøger selv. Dette beløb er på 22.500 kr. om året.
+
+        maxYdelse = børn >= 4 ? Convert.ToInt32(39516 * 1.25) : 39516; //Hvis der er fire eller flere børn i husstanden, forhøjes dette beløb med 25 pct., dog maksimalt 49.395 kr
+      }
+      else
+        return 0; //ingen ydelse
+           
+      return Math.Min(ydelse, maxYdelse) / 12; //Den årlige boligsikring kan højst være på 39.516 kr. 
+
+      //Ikke implementeret:
+      //formuetillægget
+      //Fradrag for indkomst fra hjemmeboende børn under 18 år
     }
 
     //Ikke implementerede ydelser:
     //Specielle ydelser og satser for indvandrere/udvandrere
     //Arbejdsskade
-    //Sygedagpenge
     //Revalidering
     //Fleksjob
-    //Førtidspension
 
-    //Boligstøtte
     //Børnebidrag
     //Barselsdagpenge
     //Børnebidrag
@@ -484,7 +550,6 @@ namespace overfoerselsindkomster
 
     //Efterløn
     //Fleksydelse
-    //Folkepension
     //ATP
     //Særlige ydelser til pensionister m.fl.
 

@@ -54,7 +54,7 @@ namespace overfoerselsindkomster
 
 
 
-      Console.WriteLine("Enlig på dagpenge, 1 barn, år 2012"); //Eksempel 2
+      Console.WriteLine("\nEnlig på dagpenge, 1 barn, år 2012"); //Eksempel 2
       Boolean deltidsforsikret = false;
       Boolean akasse = true;
       int ugerBeskæftigetSomLønmodtager = 52; //har arbejdet et år førend
@@ -88,6 +88,24 @@ namespace overfoerselsindkomster
       Console.WriteLine("Folkepension: " + folkepension + "Kr.");
 
 
+      Console.WriteLine("\nBoligstøtte 1 voksen og 2 børn. Lejet lejlighed på 100 m2 (2012):");
+      int kvadratmeter = 100;
+      int voksne = 1;
+      børn = 2;
+      int husleje = 65400;
+      Boolean lejer = true;
+      int husstandsformue = 0;
+      int husstandsindkomst = 275000;
+      int boligstøtte = Socialeydelser.Boligstøtte(børn, kvadratmeter, husleje, lejer, voksne, husstandsindkomst, husstandsformue);
+      Console.WriteLine("Boligstøtte: " + boligstøtte + " Kr.");
+
+      
+      Console.WriteLine("\nBoligstøtte 1 voksen og 2 børn. Lejlighed på 100 m2 (2012, folkepensionist):");
+      husleje = 62900;
+      boligstøtte = Socialeydelser.Boligstøtte(børn, kvadratmeter, husleje, lejer, voksne, husstandsindkomst, husstandsformue, true);
+      Console.WriteLine("Boligstøtte: " + boligstøtte + " Kr.");
+
+      
       Console.Read();
     }
   }
