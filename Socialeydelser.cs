@@ -537,13 +537,89 @@ namespace overfoerselsindkomster
       //Fradrag for indkomst fra hjemmeboende børn under 18 år
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="akasse">Om man har været medlem af en a-kasse i mellem 25 og 30 år og fortsat er medlem af akasse</param>
+    /// <param name="indbetaltEfterlønsbidrag">Om man har indbetalt efterlønsbidrag i mellem 25 og 30 år</param>
+    /// <param name="retTilDagpengeVedLedighed">Opfylder betingelserne for ret til a-dagpenge ved ledighed</param>
+    /// <param name="tilRådighed">Er rask og står til rådighed for arbejdsmarkedet den dag, man får efterlønsbeviset</param>
+    /// <param name="tidligEfterløn">går på efterløn tidligere end 3 år før folkepensionsalderen</param>
+    /// <param name="livsvarigPension">årlige ydelse ved efterlønsalderen</param>
+    /// <param name="andenPension">depotværdien ved efterlønsalderen</param>
+    /// <param name="udbetaltKapitalpension">Kapitalpension udbetalt sammen med efterlønnen og oprettet som led i et ansættelsesforhold</param>
+    /// <param name="udbetaltAndenPension">Anden pension udbetalt sammen med efterlønnen og oprettet som led i et ansættelsesforhold</param>
+    /// <returns></returns>
+    public static int Efterløn(int alder, int år, int livsvarigPension, int udbetaltKapitalpension, int udbetaltAndenPension, int andenPension, Boolean deltidsforsikret = false, Boolean tidligEfterløn = false, Boolean retTilDagpengeVedLedighed = true, Boolean akasse = true, Boolean indbetaltEfterlønsbidrag = true, Boolean tilRådighed = true)
+    {
+      int efterlønsalder;
+      int født = år - alder;
+
+      if (født < 1954)
+        efterlønsalder = 60;
+      else if (født < 1955)
+        efterlønsalder = 61;
+      else if (født < 1956)
+        efterlønsalder = 62;
+      else if (født < 1959)
+        efterlønsalder = 63;
+      else
+        efterlønsalder = 64;
+
+      //Krav:
+      if (!akasse || !indbetaltEfterlønsbidrag || !retTilDagpengeVedLedighed || !tilRådighed)
+        return 0; //Antages at man har bopæl i Danmark mv. at man har fået indberettet værdien af sin pensionsformue ved opnået efterlønsalder
+
+      int dagpengesats = deltidsforsikret ? 136500 : 204880;
+
+      int efterløn;
+      if (født < 1959 && tidligEfterløn)
+        efterløn = Convert.ToInt32(0.91 * dagpengesats); //Er man født den 1. januar 1956 – 30. juni 1959 og går på efterløn tidligere end 3 år før folkepensionsalderen, vil efterlønnen være maks. 91 pct. af dagpengesatsen i hele efterlønsperioden.
+      else
+        efterløn = dagpengesats; //Er man født den 1. januar 1956 eller senere og tidligst går på efterløn 3 år før folkepensionsalderen, er efterlønssatsen maks. 100 pct. af dagpengesatsen i hele efterlønsperioden.
+
+      //Modregning:
+      int bundfradrag = 14200;
+
+      //Andre pensionsordninger
+      double andenPensioniBeregning = andenPension * 0.05;
+      double modregning = Math.Max(0, (andenPensioniBeregning - bundfradrag) * 0.6); //For kapitalpensioner, ratepensioner mv. er modregningsgrundlaget 5 pct. af depotværdien ved efterlønsalderen. Fradraget sker herefter med 60 pct.
+
+      bundfradrag = andenPensioniBeregning >= bundfradrag ? 0 : bundfradrag - Convert.ToInt32(andenPensioniBeregning); //eventuel resterende del af bundfradrag
+
+      //Livsvarige pensionsordninger
+      double livsvarigPensioniBeregning = 0.8 * livsvarigPension;
+      modregning += Math.Max(0, (livsvarigPensioniBeregning - bundfradrag) * 0.6); //For pensioner med løbende livsvarige ydelser er modregningsgrundlaget 80 pct. af den årlige ydelse ved efterlønsalderen. Fradraget i efterlønnen sker med 60 pct.
+
+      bundfradrag = livsvarigPensioniBeregning >= bundfradrag ? 0 : bundfradrag - Convert.ToInt32(livsvarigPensioniBeregning);
+
+      modregning += (udbetaltKapitalpension * 0.05 - bundfradrag) * 0.6;
+
+      modregning += udbetaltAndenPension * 0.5;
+
+
+
+
+      return 0;
+
+      //Ikke implementeret:
+      //Særlige betingelser for selvstændige
+      //Indbetaling af efterlønsbidrag
+      //Tilbagebetaling af efterlønsbidrag
+      //Fortrydelsesret
+      //Udskydelse af tidspunktet, hvor man går på efterløn
+      //Indberetning af pensionsformue
+      //Betingelser for af få efterløn som fuldtidsforsikret
+      //Særregel for løbende pensioner, der er oprettet som led i et ansættelsesforhold
+
+    }
+
     //Ikke implementerede ydelser:
     //Specielle ydelser og satser for indvandrere/udvandrere
     //Arbejdsskade
     //Revalidering
     //Fleksjob
 
-    //Børnebidrag
     //Barselsdagpenge
     //Børnebidrag
     //Daginstitutionstilskud
