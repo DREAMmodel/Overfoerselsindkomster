@@ -549,8 +549,10 @@ namespace overfoerselsindkomster
     /// <param name="andenPension">depotværdien ved efterlønsalderen</param>
     /// <param name="udbetaltKapitalpension">Kapitalpension udbetalt sammen med efterlønnen og oprettet som led i et ansættelsesforhold</param>
     /// <param name="udbetaltAndenPension">Anden pension udbetalt sammen med efterlønnen og oprettet som led i et ansættelsesforhold</param>
+    /// <param name="privatPension">Private pensioner og de indefrosne dyrtidsportioner, der faktisk bliver udbetalt sammen med efterlønnen</param>
+    /// <param name="privatLivsvarigLivsrente">Private livsvarig livsrente-pension, der faktisk bliver udbetalt sammen med efterlønnen</param>
     /// <returns></returns>
-    public static int Efterløn(int alder, int år, int livsvarigPension, int udbetaltKapitalpension, int udbetaltAndenPension, int andenPension, Boolean deltidsforsikret = false, Boolean tidligEfterløn = false, Boolean retTilDagpengeVedLedighed = true, Boolean akasse = true, Boolean indbetaltEfterlønsbidrag = true, Boolean tilRådighed = true)
+    public static int Efterløn(int alder, int år, int livsvarigPension, int udbetaltKapitalpension, int udbetaltAndenPension, int privatPension, int privatLivsvarigLivrente, int andenPension, Boolean deltidsforsikret = false, Boolean tidligEfterløn = false, Boolean retTilDagpengeVedLedighed = true, Boolean akasse = true, Boolean indbetaltEfterlønsbidrag = true, Boolean tilRådighed = true)
     {
       int efterlønsalder;
       int født = år - alder;
@@ -592,12 +594,18 @@ namespace overfoerselsindkomster
       modregning += Math.Max(0, (livsvarigPensioniBeregning - bundfradrag) * 0.6); //For pensioner med løbende livsvarige ydelser er modregningsgrundlaget 80 pct. af den årlige ydelse ved efterlønsalderen. Fradraget i efterlønnen sker med 60 pct.
 
       bundfradrag = livsvarigPensioniBeregning >= bundfradrag ? 0 : bundfradrag - Convert.ToInt32(livsvarigPensioniBeregning);
-
-      modregning += (udbetaltKapitalpension * 0.05 - bundfradrag) * 0.6;
+      double udbetaltKapitalpensioniBeregning = udbetaltKapitalpension * 0.05;
+      modregning += (udbetaltKapitalpensioniBeregning - bundfradrag) * 0.6;
 
       modregning += udbetaltAndenPension * 0.5;
 
+      bundfradrag = udbetaltKapitalpensioniBeregning >= bundfradrag ? 0 : bundfradrag - Convert.ToInt32(udbetaltKapitalpensioniBeregning);
+      double privatPensioniBeregning = privatPension * 0.05;
+      modregning += (privatPensioniBeregning - bundfradrag) * 0.6;
 
+      bundfradrag = privatPensioniBeregning >= bundfradrag ? 0 : bundfradrag - Convert.ToInt32(privatPensioniBeregning);
+      modregning += (privatLivsvarigLivrente * 0.8 - bundfradrag) * 0.6;
+      //Private pensioner og de indefrosne dyrtidsportioner
 
 
       return 0;
