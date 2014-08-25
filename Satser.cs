@@ -40,6 +40,8 @@ namespace overfoerselsindkomster
     static public int[] khUnderAldermBørnParPåSU = { 13732, 13952, 9498 }; //Par på SU, uddhj. eller kontanthj. § 25, stk. 3, nr. 2
     static public int[] khUnderAlderuBørnUdeboende = { 6660, 6767, 6889 }; //§ 25, stk 1, nr. 3
 
+    //Efterløn
+    static public int[] elBundfradrag = { 14200, 14400, 14700 };
 
     public static int SygedagpengeMaks(int år)
     {      

@@ -545,14 +545,11 @@ namespace overfoerselsindkomster
     /// <param name="retTilDagpengeVedLedighed">Opfylder betingelserne for ret til a-dagpenge ved ledighed</param>
     /// <param name="tilRådighed">Er rask og står til rådighed for arbejdsmarkedet den dag, man får efterlønsbeviset</param>
     /// <param name="tidligEfterløn">går på efterløn tidligere end 3 år før folkepensionsalderen</param>
-    /// <param name="livsvarigPension">årlige ydelse ved efterlønsalderen</param>
-    /// <param name="andenPension">depotværdien ved efterlønsalderen</param>
-    /// <param name="udbetaltKapitalpension">Kapitalpension udbetalt sammen med efterlønnen og oprettet som led i et ansættelsesforhold</param>
-    /// <param name="udbetaltAndenPension">Anden pension udbetalt sammen med efterlønnen og oprettet som led i et ansættelsesforhold</param>
-    /// <param name="privatPension">Private pensioner og de indefrosne dyrtidsportioner, der faktisk bliver udbetalt sammen med efterlønnen</param>
-    /// <param name="privatLivsvarigLivsrente">Private livsvarig livsrente-pension, der faktisk bliver udbetalt sammen med efterlønnen</param>
+    /// <param name="andenPension">Depotværdien ved efterlønsalderen, al kapitalpension, privat ratepension, Ophørende livrente (ikke-udbetalt), Ophørende indeks (ikke-udbetalt), Indefrosne dyrtidsportioner (ikke-udbetalt)</param>
+    /// <param name="udbetaltAndenPension">Udbetalt pension oprettet som led i et ansættelsesforhold. Omfatter ratepension og livsvarig livrente og ophørende livsrente</param>
+    /// <param name="privatLivsvarigLivsrente">Private livsvarig livsrente-pension (udbetalt eller ikke-udbetalt) samt ikke-privat ikke-udbetalt livsvarig livsrente-pension</param>
     /// <returns></returns>
-    public static int Efterløn(int alder, int år, int livsvarigPension, int udbetaltKapitalpension, int udbetaltAndenPension, int privatPension, int privatLivsvarigLivrente, int andenPension, Boolean deltidsforsikret = false, Boolean tidligEfterløn = false, Boolean retTilDagpengeVedLedighed = true, Boolean akasse = true, Boolean indbetaltEfterlønsbidrag = true, Boolean tilRådighed = true)
+    public static int Efterløn(int alder, int år, int udbetaltAndenPension, int privatLivsvarigLivrente, int andenPension, Boolean deltidsforsikret = false, Boolean tidligEfterløn = false, Boolean retTilDagpengeVedLedighed = true, Boolean akasse = true, Boolean indbetaltEfterlønsbidrag = true, Boolean tilRådighed = true)
     {
       int efterlønsalder;
       int født = år - alder;
@@ -569,7 +566,7 @@ namespace overfoerselsindkomster
         efterlønsalder = 64;
 
       //Krav:
-      if (!akasse || !indbetaltEfterlønsbidrag || !retTilDagpengeVedLedighed || !tilRådighed)
+      if (!akasse || !indbetaltEfterlønsbidrag || !retTilDagpengeVedLedighed || !tilRådighed || alder < efterlønsalder)
         return 0; //Antages at man har bopæl i Danmark mv. at man har fået indberettet værdien af sin pensionsformue ved opnået efterlønsalder
 
       int dagpengesats = deltidsforsikret ? 136500 : 204880;
@@ -581,34 +578,31 @@ namespace overfoerselsindkomster
         efterløn = dagpengesats; //Er man født den 1. januar 1956 eller senere og tidligst går på efterløn 3 år før folkepensionsalderen, er efterlønssatsen maks. 100 pct. af dagpengesatsen i hele efterlønsperioden.
 
       //Modregning:
-      int bundfradrag = 14200;
+      int bundfradrag = Satser.elBundfradrag[år - 2012];
 
       //Andre pensionsordninger
       double andenPensioniBeregning = andenPension * 0.05;
-      double modregning = Math.Max(0, (andenPensioniBeregning - bundfradrag) * 0.6); //For kapitalpensioner, ratepensioner mv. er modregningsgrundlaget 5 pct. af depotværdien ved efterlønsalderen. Fradraget sker herefter med 60 pct.
+      double modregning;
+      if (født < 1956)
+      {
+        modregning = Math.Max(0, (andenPensioniBeregning - bundfradrag) * 0.6); //For kapitalpensioner, ratepensioner mv. er modregningsgrundlaget 5 pct. af depotværdien ved efterlønsalderen. Fradraget sker herefter med 60 pct.
+        bundfradrag = andenPensioniBeregning >= bundfradrag ? 0 : bundfradrag - Convert.ToInt32(andenPensioniBeregning); //eventuel resterende del af bundfradrag
+      }
+      else
+        modregning = Math.Max(0, andenPensioniBeregning * 0.8); //For kapitalpensioner, ratepensioner mv. er modregningsgrundlaget 5 pct. af depotværdien ved efterlønsalderen. Fradraget sker herefter med 80 pct.
 
-      bundfradrag = andenPensioniBeregning >= bundfradrag ? 0 : bundfradrag - Convert.ToInt32(andenPensioniBeregning); //eventuel resterende del af bundfradrag
+      if (født < 1956)
+        modregning += udbetaltAndenPension * 0.5;
+      else
+        modregning += udbetaltAndenPension * 0.64;
 
-      //Livsvarige pensionsordninger
-      double livsvarigPensioniBeregning = 0.8 * livsvarigPension;
-      modregning += Math.Max(0, (livsvarigPensioniBeregning - bundfradrag) * 0.6); //For pensioner med løbende livsvarige ydelser er modregningsgrundlaget 80 pct. af den årlige ydelse ved efterlønsalderen. Fradraget i efterlønnen sker med 60 pct.
-
-      bundfradrag = livsvarigPensioniBeregning >= bundfradrag ? 0 : bundfradrag - Convert.ToInt32(livsvarigPensioniBeregning);
-      double udbetaltKapitalpensioniBeregning = udbetaltKapitalpension * 0.05;
-      modregning += (udbetaltKapitalpensioniBeregning - bundfradrag) * 0.6;
-
-      modregning += udbetaltAndenPension * 0.5;
-
-      bundfradrag = udbetaltKapitalpensioniBeregning >= bundfradrag ? 0 : bundfradrag - Convert.ToInt32(udbetaltKapitalpensioniBeregning);
-      double privatPensioniBeregning = privatPension * 0.05;
-      modregning += (privatPensioniBeregning - bundfradrag) * 0.6;
-
-      bundfradrag = privatPensioniBeregning >= bundfradrag ? 0 : bundfradrag - Convert.ToInt32(privatPensioniBeregning);
-      modregning += (privatLivsvarigLivrente * 0.8 - bundfradrag) * 0.6;
-      //Private pensioner og de indefrosne dyrtidsportioner
+      if (født < 1956)
+        modregning += (privatLivsvarigLivrente * 0.8 - bundfradrag) * 0.6;
+      else
+        modregning += privatLivsvarigLivrente * 0.8 * 0.8;
 
 
-      return 0;
+      return Convert.ToInt32((efterløn - modregning) / 12);
 
       //Ikke implementeret:
       //Særlige betingelser for selvstændige
@@ -616,10 +610,10 @@ namespace overfoerselsindkomster
       //Tilbagebetaling af efterlønsbidrag
       //Fortrydelsesret
       //Udskydelse af tidspunktet, hvor man går på efterløn
+      //Modregning af pensioner, hvis man er født før den 1. januar 1956 og har udskudt sin efterløn
       //Indberetning af pensionsformue
       //Betingelser for af få efterløn som fuldtidsforsikret
       //Særregel for løbende pensioner, der er oprettet som led i et ansættelsesforhold
-
     }
 
     //Ikke implementerede ydelser:

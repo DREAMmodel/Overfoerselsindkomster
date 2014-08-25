@@ -106,6 +106,19 @@ namespace overfoerselsindkomster
       Console.WriteLine("Boligstøtte: " + boligstøtte + " Kr.");
 
       
+      Console.WriteLine("\nEfterløn, 2012, kapitalpension på 720.000 kr. og en ratepension oprettet som et led i et ansættelsesforhold på 50.000 :"); //Eksempel fra Sociale Ydelser 2012, s. 126
+      int udbetaltAndenPension = 50000; //ratepension oprettet som et led i et ansættelsesforhold på 50.000 årligt i 10 år.
+      int andenPension  = 720000; //kapitalpension, privat, ikke udbetalt
+      int efterløn = Socialeydelser.Efterløn(69, 2012, udbetaltAndenPension, 0, andenPension);
+      Console.WriteLine("Efterløn: " + efterløn + " Kr.");
+
+      Console.WriteLine("\nEfterløn, kapitalpension på 500.000 kr., ratepension oprettet som et led i et ansættelsesforhold på 456.000 kr. m. årlig ydelse på 50.000 kr. i 10 år. Personen ønsker ikke at få pensionerne udbetalt:"); //Eksempel fra Sociale Ydelser 2012, s. 125
+      andenPension = 500000; //kapitalpension
+      andenPension += 456000; //ophørende ratepenson, ansættelsesforhold
+      efterløn = Socialeydelser.Efterløn(69, 2012, 0, 0, andenPension);
+      Console.WriteLine("Efterløn: " + efterløn + " Kr.");
+
+
       Console.Read();
     }
   }
