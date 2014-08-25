@@ -338,7 +338,6 @@ namespace overfoerselsindkomster
       //if (år == 2014)
       //overgangsordning ikke implementeret
 
-      //Satser fra: http://bm.dk/da/Tal%20og%20tendenser/Satser%20for%202014/Kontanthjaelp.aspx
       int sats;
       if (alder >= aldersgrænse)
         if (børn > 0) //Fyldt 30, forsørger børn
@@ -476,7 +475,7 @@ namespace overfoerselsindkomster
     /// <param name="folkepensionist"></param>
     /// <param name="førtidspensionist"></param>
     /// <returns></returns>
-    public static int Boligstøtte(int børn, int kvardratmeter, int husleje, Boolean lejer, int voksne, int husstandsindkomst, int husstandsformue, Boolean folkepensionist = false, Boolean førtidspensionist = false)
+    public static int Boligstøtte(int år, int børn, int kvardratmeter, int husleje, Boolean lejer, int voksne, int husstandsindkomst, int husstandsformue, Boolean folkepensionist = false, Boolean førtidspensionist = false)
     {
 
       kvardratmeter = Math.Min(kvardratmeter, 65 + 20 * voksne + 20 * børn); //Enlige får boligsikring til en bolig på op til 65 m2. Par uden børn får op til 85 m2. Hvis der er andre personer i husstanden, børn eller andre voksne, lægges der 20 m2 til pr. person.
@@ -485,47 +484,48 @@ namespace overfoerselsindkomster
       if (folkepensionist)
       { //boligydelse
         if (børn < 1) //Maksimumbeløb for den husleje, som kan indgå i boligstøtteberegningen afhænger af antal børn
-          husleje = Math.Min(81000, husleje);
+          husleje = Math.Min(Satser.bsPensionistMaks0Børn[år - 2012], husleje);
         else if (børn == 1)
-          husleje = Math.Min(85050, husleje);
+          husleje = Math.Min(Satser.bsPensionistMaks1Børn[år - 2012], husleje);
         else if (børn == 2)
-          husleje = Math.Min(89100, husleje);
+          husleje = Math.Min(Satser.bsPensionistMaks2Børn[år - 2012], husleje);
         else if (børn == 3)
-          husleje = Math.Min(93150, husleje);
+          husleje = Math.Min(Satser.bsPensionistMaks3Børn[år - 2012], husleje);
         else //over 3 børn
-          husleje = Math.Min(97200, husleje);
+          husleje = Math.Min(Satser.bsPensionistMaks4Børn[år - 2012], husleje);
 
-        int indkomstgrænse = børn > 1 ? 144300 + 38000 * Math.Max(0, Math.Min(4, børn - 1)) : 144300; ////Er der mere end 1 barn i husstanden, forhøjes indkomstgrænsen med 38.000 kr. for hvert barn til og med 4 børn.
-        ydelse = Convert.ToInt32(0.75 * (husleje + 6100) - Math.Max(0, 0.225 * (husstandsindkomst - indkomstgrænse))); //Boligydelsen udgør som hovedregel 75 pct. af boligudgiften med et tillæg på 6.100 kr. // Herfra trækkes 22,5 pct. af den del af husstandsindkomsten, der overstiger 144.300 kr. Hvis indtægten er mindre end 144.300 kr., er der ikke noget fradrag for indtægt i boligydelsen.
 
-        ydelse = Convert.ToInt32(Math.Min(ydelse, husleje - Math.Max(15300, 0.11 * husstandsindkomst))); //Der skal altid betales et mindstebeløb af ansøger selv. Dette beløb er på 11 pct. af indkomsten, dog mindst 15.300 kr. om året.
+        int indkomstgrænse = børn > 1 ? Satser.bsPensionistIndkomstgrænse[år - 2012] + Satser.bsPensionistIndkomstgrænseForhøjelse[år - 2012] * Math.Max(0, Math.Min(4, børn - 1)) : Satser.bsPensionistIndkomstgrænse[år - 2012]; ////Er der mere end 1 barn i husstanden, forhøjes indkomstgrænsen med 38.000 kr. for hvert barn til og med 4 børn.
+        ydelse = Convert.ToInt32(0.75 * (husleje + Satser.bsPensionistTillæg[år - 2012]) - Math.Max(0, 0.225 * (husstandsindkomst - indkomstgrænse))); //Boligydelsen udgør som hovedregel 75 pct. af boligudgiften med et tillæg på 6.100 kr. // Herfra trækkes 22,5 pct. af den del af husstandsindkomsten, der overstiger 144.300 kr. Hvis indtægten er mindre end 144.300 kr., er der ikke noget fradrag for indtægt i boligydelsen.
 
-        maxYdelse = børn >= 4 ? 53400 : 42720; //Som udgangspunkt kan den årlige boligydelse højst være på 42.720 kr. årligt. Dette beløb hæves til 53.400 kr., hvis der er tale om, at:....
+        ydelse = Convert.ToInt32(Math.Min(ydelse, husleje - Math.Max(Satser.bsMindstebeløb[år - 2012], 0.11 * husstandsindkomst))); //Der skal altid betales et mindstebeløb af ansøger selv. Dette beløb er på 11 pct. af indkomsten, dog mindst 15.300 kr. om året.
+
+        maxYdelse = børn >= 4 ? Convert.ToInt32(Satser.bsPensionistMaxYdelse[år - 2012] * 1.25) : Satser.bsPensionistMaxYdelse[år - 2012]; //Som udgangspunkt kan den årlige boligydelse højst være på 42.720 kr. årligt. Dette beløb hæves til 53.400 kr., hvis der er tale om, at:....
         //Det antages at ingen af følgende er opfyldt: Pensionisten har fået anvist en almen bolig af kommunen / – hvis pensionisten er stærkt bevægelseshæmmet, og boligen er egnet / til ansøgers bevægelseshandicap / – pensionisten får døgnhjælp efter servicelovens § 96
         //Det antages endvidere at der ikke er tale om ældrebolig efter den tidligere ældrelov eller en almen bolig, der er anvist af kommunen, er der intet maksimumsbeløb.
       } 
       else if (lejer || førtidspensionist)
       {
         if (børn < 1) //Maksimumbeløb for den husleje, som kan indgå i boligstøtteberegningen afhænger af antal børn
-          husleje = Math.Min(74900, husleje);
+          husleje = Math.Min(Satser.bsMaks0Børn[år - 2012], husleje);
         else if (børn == 1)
-          husleje = Math.Min(78645, husleje);
+          husleje = Math.Min(Satser.bsMaks1Børn[år - 2012], husleje);
         else if (børn == 2)
-          husleje = Math.Min(82390, husleje);
+          husleje = Math.Min(Satser.bsMaks2Børn[år - 2012], husleje);
         else if (børn == 3)
-          husleje = Math.Min(86135, husleje);
+          husleje = Math.Min(Satser.bsMaks3Børn[år - 2012], husleje);
         else //over 3 børn
-          husleje = Math.Min(89880, husleje);
+          husleje = Math.Min(Satser.bsMaks4Børn[år - 2012], husleje);
 
-        int indkomstgrænse = børn > 1 ? 133500 + 35200 * Math.Max(0, Math.Min(4, børn - 1)) : 133500; //Er der mere end 1 barn i husstanden, forhøjes indkomstgrænsen med 35.200 kr. for hvert barn til og med 4 børn.
+        int indkomstgrænse = børn > 1 ? Satser.bsIndkomstgrænse[år - 2012] + Satser.bsIndkomstgrænseForhøjelse[år - 2012] * Math.Max(0, Math.Min(4, børn - 1)) : Satser.bsIndkomstgrænse[år - 2012]; //Er der mere end 1 barn i husstanden, forhøjes indkomstgrænsen med 35.200 kr. for hvert barn til og med 4 børn.
         ydelse = Convert.ToInt32(0.6 * husleje - Math.Max(0, 0.18 * (husstandsindkomst - indkomstgrænse))); //Boligsikring kan som hovedregel udgøre 60 pct. af boligudgiften. Herfra trækkes 18 pct. af den del af husstandsindkomsten, der overstiger 133.500 kr. Hvis indtægten er mindre end 133.500 kr., er der ikke noget fradrag for indtægt i boligsikringen.
 
         if (børn == 0 && !førtidspensionist)
           ydelse = Convert.ToInt32(Math.Max(0.15 * husleje, ydelse)); //For husstande uden børn kan boligsikringen som hovedregel højst udgøre 15 pct. af huslejen. Denne regel gælder ikke for førtidspensionister.
 
-        ydelse = Math.Min(ydelse, (husleje - 22500)); //Der skal altid betales et mindstebeløb af ansøger selv. Dette beløb er på 22.500 kr. om året.
+        ydelse = Math.Min(ydelse, (husleje - Satser.bsMindstebeløb[år - 2012])); //Der skal altid betales et mindstebeløb af ansøger selv. Dette beløb er på 22.500 kr. om året.
 
-        maxYdelse = børn >= 4 ? Convert.ToInt32(39516 * 1.25) : 39516; //Hvis der er fire eller flere børn i husstanden, forhøjes dette beløb med 25 pct., dog maksimalt 49.395 kr
+        maxYdelse = børn >= 4 ? Convert.ToInt32(Satser.bsMaxYdelse[år - 2012] * 1.25) : Satser.bsMaxYdelse[år - 2012]; //Hvis der er fire eller flere børn i husstanden, forhøjes dette beløb med 25 pct., dog maksimalt 49.395 kr
       }
       else
         return 0; //ingen ydelse
@@ -569,7 +569,7 @@ namespace overfoerselsindkomster
       if (!akasse || !indbetaltEfterlønsbidrag || !retTilDagpengeVedLedighed || !tilRådighed || alder < efterlønsalder)
         return 0; //Antages at man har bopæl i Danmark mv. at man har fået indberettet værdien af sin pensionsformue ved opnået efterlønsalder
 
-      int dagpengesats = deltidsforsikret ? 136500 : 204880;
+      int dagpengesats = deltidsforsikret ? Convert.ToInt32(Satser.DpMaksimalSats[år - 2012] * 2/3d) : Satser.DpMaksimalSats[år - 2012]; //deltidsforsinkerede får 2/3 af maksimal sats
 
       int efterløn;
       if (født < 1959 && tidligEfterløn)
@@ -626,7 +626,6 @@ namespace overfoerselsindkomster
     //Børnebidrag
     //Daginstitutionstilskud
 
-    //Efterløn
     //Fleksydelse
     //ATP
     //Særlige ydelser til pensionister m.fl.

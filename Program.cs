@@ -96,13 +96,13 @@ namespace overfoerselsindkomster
       Boolean lejer = true;
       int husstandsformue = 0;
       int husstandsindkomst = 275000;
-      int boligstøtte = Socialeydelser.Boligstøtte(børn, kvadratmeter, husleje, lejer, voksne, husstandsindkomst, husstandsformue);
+      int boligstøtte = Socialeydelser.Boligstøtte(år, børn, kvadratmeter, husleje, lejer, voksne, husstandsindkomst, husstandsformue);
       Console.WriteLine("Boligstøtte: " + boligstøtte + " Kr.");
 
       
       Console.WriteLine("\nBoligstøtte 1 voksen og 2 børn. Lejlighed på 100 m2 (2012, folkepensionist):");
       husleje = 62900;
-      boligstøtte = Socialeydelser.Boligstøtte(børn, kvadratmeter, husleje, lejer, voksne, husstandsindkomst, husstandsformue, true);
+      boligstøtte = Socialeydelser.Boligstøtte(år, børn, kvadratmeter, husleje, lejer, voksne, husstandsindkomst, husstandsformue, true);
       Console.WriteLine("Boligstøtte: " + boligstøtte + " Kr.");
 
       
