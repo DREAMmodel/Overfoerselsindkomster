@@ -15,27 +15,6 @@ namespace overfoerselsindkomster
   class Socialeydelser
   {
 
-    #region satser
-    //Førtidspension satser
-    static int[] _indtægtsgrænserÆgtefællePensionist = { 271100, 279000, 284600, 290300, 297300, 305900, 315400, 327100, 333300, 343000, 350200 }; //indtægtsgrænser, hvis ægtefælle er pensionist, talrække starter i 2003
-    static int[] _indtægtsgrænserÆgtefælleIkkePensionist = { 179400, 184600, 188300, 192100, 196700, 202400, 208700, 216400, 220500, 226900, 231700 }; //indtægtsgrænser, hvis ægtefælle ikke er pensionist, talrække starter i 2003
-    static int[] _førtidspensionSatserEnlige = { 162036, 166740, 170076, 173472, 177636, 182784, 188448, 195420, 199128, 204900, 209208 }; //Førtidspension, enlige, talrække starter i 2003
-    static int[] _førtidspensionSatserPar = { 137724, 141720, 144552, 147444, 150984, 155364, 160176, 166104, 169260, 174168, 177828 }; //Førtidspension, par, talrække starter i 2003
-    static int[] _fpFradragHosÆgtefælle = _førtidspensionSatserPar; //Fradrag i indtægt hos ægtefælle/samlever (ikke-pensionist)
-
-    static int[] _fradragEnlig = { 55100, 56700, 57800, 59000, 60400, 62200, 64100, 66500, 67800, 69800, 71300 };
-    static int[] _fradragPar = { 87500, 90000, 91800, 93600, 95800, 98600, 101700, 105500, 107500, 110600, 112900 };
-    static double[] _nedsættelse = { 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3 }; //Nedsættelse i pct. af indtægtsgrundlag
-    static double[] _nedsættelseÆgtefællePensionist = { 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15 }; //Nedsættelse i pct. af indtægtsgrundlag, ægtefælles/samlever har ret til pension			
-
-    //Skattesatser
-    static double[] _skatArbejdsmarkedsbidragssats = { 0.5, 0.6, 0.7, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8 }; //Arbejdsmarkedsbidragssats i pct, talrække starter i  1994
-
-    //Kontanthjælp satser
-    static double[] _khTimesats = { 133.4900929, 134.0240532, 137.2406305, 137.6523524, 140.9560089, 144.6208651, 149.2486949, 154.0239743, 158.1827291, 163.2452483, 167.9794322, 171.3390101, 174.7657871, 178.96, 185.94, 195.05, 200.51, 205.52, 209.56, }; //Timesats, hvis ikke timelønnet, talrække starter i 1994
-    const int _khMaksTimer = 160;
-    #endregion satser
-
     /// <summary>
     /// Beregner månedlig udbetaling af førtidspension
     /// </summary>
@@ -58,33 +37,33 @@ namespace overfoerselsindkomster
       if (pensionistÆgtefælle)
       {
         //Din partners indtægter kan højst indgå med [354.800] kr. i beregningen af din førtidspension.
-        ægtefællesIndkomst = Math.Max(0, Math.Min(_indtægtsgrænserÆgtefællePensionist[år - 2003], personligIndkomstÆgtefælle - _førtidspensionSatserPar[år - 2003])); //Ægtefælles indkomst før førtidspension       
+        ægtefællesIndkomst = Math.Max(0, Math.Min(Satser.IndtægtsgrænserÆgtefællePensionist(), personligIndkomstÆgtefælle - Satser.førtidspensionSatserPar())); //Ægtefælles indkomst før førtidspension       
         //Din førtidspension bliver sat [15] kr. ned, for hver 100 kr. jeres samlede indtægt er højere end [114.400] kr. 
-        nedsættelsePct = _nedsættelseÆgtefællePensionist[år - 2003];
+        nedsættelsePct = Satser.nedsættelseÆgtefællePensionist();
       }
       else
       {
         //Din partners indtægter kan højst indgå med [234.600] kr. i beregningen af din førtidspension.  
         //Er din partner ikke pensionist, skal Udbetaling Danmark se bort fra de første [180.137] kr., din partner tjener.
-        ægtefællesIndkomst = Math.Max(0, Math.Min(_indtægtsgrænserÆgtefælleIkkePensionist[år - 2003], personligIndkomstÆgtefælle - _fpFradragHosÆgtefælle[år - 2003])); //Ægtefælles indkomst
+        ægtefællesIndkomst = Math.Max(0, Math.Min(Satser.indtægtsgrænserÆgtefælleIkkePensionist(), personligIndkomstÆgtefælle - Satser.fpFradragHosÆgtefælle())); //Ægtefælles indkomst
         //Din førtidspension bliver sat ned med [30] kr., for hver 100 kr. jeres samlede indtægt er højere end [114.400] kr. om året.
-        nedsættelsePct = _nedsættelse[år - 2003];
+        nedsættelsePct = Satser.nedsættelse();
       }
 
       int indtægtsgrundlag = personligIndkomst + ægtefællesIndkomst;
       //Herefter kan I sammenlagt have supplerende indtægter på op til 114.400 kr. om året, før det påvirker din pension. 
-      int nedsættelse = Convert.ToInt32(nedsættelsePct * Math.Max(0, indtægtsgrundlag - _fradragPar[år - 2003])); //nedsættelse i kr
+      int nedsættelse = Convert.ToInt32(nedsættelsePct * Math.Max(0, indtægtsgrundlag - Satser.fradragPar())); //nedsættelse i kr
 
-      return Convert.ToInt32(Math.Max(0, _førtidspensionSatserPar[år - 2003] - nedsættelse) / 12 * brøkpension); //beregnet førtidspension
+      return Convert.ToInt32(Math.Max(0, Satser.førtidspensionSatserPar() - nedsættelse) / 12 * brøkpension); //beregnet førtidspension
     }
 
     public int FørtidspensionEnlig(int personligIndkomst, int år)
     {
       //Din førtidspension bliver sat [30] kr. ned, for hver 100 kr. din samlede indtægt er højere end [72.200] kr. om året.
       //Hvis du er enlig, kan du have andre indtægter op til [72.200] kr. om året, uden at det påvirker din førtidspensions størrelse.
-      int nedsættelse = Convert.ToInt32(_nedsættelse[år - 2003] * Math.Max(0, personligIndkomst - _fradragEnlig[år - 2003])); //nedsættelse i kr   
+      int nedsættelse = Convert.ToInt32(Satser.nedsættelse() * Math.Max(0, personligIndkomst - Satser.fradragEnlig())); //nedsættelse i kr   
 
-      return Math.Max(0, _førtidspensionSatserEnlige[år - 2003] - nedsættelse) / 12; //beregnet førtidspension
+      return Math.Max(0, Satser.førtidspensionSatserEnlige() - nedsættelse) / 12; //beregnet førtidspension
     }
 
     /// <summary>
@@ -116,12 +95,12 @@ namespace overfoerselsindkomster
       if (alder < 25 && hf < Education.ErhFag && ugerBeskæftigetSomLønmodtager < (52 * 2) && dagpengeMåneder >= 26/4) //særlige regler for unge uden uddannelse efter 26. uge...
       {
         //hvis du er under 25 år, og du ikke har en dimittenduddannelse (en uddannelse over gymnasieniveau af mindst 1½ års varighed), og du ikke har arbejdet mindst 3.848 timer (to år på fuld tid) inden for de seneste tre år, så får du kun udbetalt 50 % af den maksimale dagpengesats (408 kroner per dag i 2014 tal) fra din 26. ledighedsuge til din 104. ledighedsuge.
-        dagpenge = Convert.ToInt32(Satser.DpMaksimalSats[år - 1994] * 0.5); //fra 26. uge!!
+        dagpenge = Convert.ToInt32(Satser.DpMaksimalSats() * 0.5); //fra 26. uge!!
       }
       else
       {
         //Sats (mindstesats er 82% af maksimalsats).
-        dagpenge = Convert.ToInt32(Math.Max(0.82 * Satser.DpMaksimalSats[år - 1994], Math.Min(Satser.DpMaksimalSats[år - 1994], månedslønFørArbejdsløshed * 12 * 0.9))); //Du kan dog højst få 90 pct. af den løn, du tjente, før du blev arbejdsløs. 
+        dagpenge = Convert.ToInt32(Math.Max(0.82 * Satser.DpMaksimalSats(), Math.Min(Satser.DpMaksimalSats(), månedslønFørArbejdsløshed * 12 * 0.9))); //Du kan dog højst få 90 pct. af den løn, du tjente, før du blev arbejdsløs. 
       }
 
       if (deltidsforsikret)
@@ -129,7 +108,7 @@ namespace overfoerselsindkomster
 
       //reduktion ved supplerende dagpenge
       if (arbejdstimer == 0)
-        arbejdstimer = arbejdsindkomst / Satser.Timesats[år - 1994]; //omregn fra indkomst til timer
+        arbejdstimer = arbejdsindkomst / Satser.Timesats(); //omregn fra indkomst til timer
       arbejdstimer *= 12 / 52d; //omregnes fra timer pr måned til timer pr uge
 
       double reduktion = arbejdstimer > 30 ? 0 : 1 - arbejdstimer / 37d;//Aftrapning af ydelse ved supplerende dagpenge
@@ -197,14 +176,14 @@ namespace overfoerselsindkomster
 
       int folkepension;
 
-      int grundbeløb = Satser.fpGrundbeløb[år - 2012];
+      int grundbeløb = Satser.fpGrundbeløb();
       int pensionstillæg;
       if (civilstand == CivilstandPensionist.Enlig || civilstand == CivilstandPensionist.ReeltEnlig)
       {
-        int fradragsbeløb = Satser.fpFradragvTillægEnlig[år - 2012];
+        int fradragsbeløb = Satser.fpFradragvTillægEnlig();
 
-        pensionstillæg = Satser.fpPensionstillægEnlige[år - 2012]; //før evt nedsættelse
-        int fradrag = Math.Max(0, Math.Min(arbejdsindtægt, Satser.fpFradragvArbejde[år-2012])) + fradragsbeløb;
+        pensionstillæg = Satser.fpPensionstillægEnlige(); //før evt nedsættelse
+        int fradrag = Math.Max(0, Math.Min(arbejdsindtægt, Satser.fpFradragvArbejde())) + fradragsbeløb;
 
         double reduktionsgrad = civilstand == CivilstandPensionist.Enlig ? 0.32 : 0.309;
 
@@ -213,32 +192,32 @@ namespace overfoerselsindkomster
       }
       else
       { //samlevende og gifte
-        int fradragsbeløb = Satser.fpFradragvTillægPar[år - 2012];
+        int fradragsbeløb = Satser.fpFradragvTillægPar();
 
-        pensionstillæg = Satser.fpPensionstillægPar[år - 2012];
+        pensionstillæg = Satser.fpPensionstillægPar();
 
         int samleverIndkomstIndgåriBeregning;
         if (samleverPensionist)
           samleverIndkomstIndgåriBeregning = samleverIndkomst;
         else
         { //hvis ægtefælle ikke er pensionist gives et fradrag
-          if (samleverIndkomst > Satser.fpFradragSamlever[år - 2012]) //For en pensionist, der er gift/samlevende med en person, der ikke modtager social pension, ...
+          if (samleverIndkomst > Satser.fpFradragSamlever()) //For en pensionist, der er gift/samlevende med en person, der ikke modtager social pension, ...
           {
-            samleverIndkomstIndgåriBeregning = Satser.fpFradragSamlever[år - 2012] / 2; //...fradrages halvdelen af ægtefællens/samleverens indtægter op til 201.100 kr.
-            samleverIndkomstIndgåriBeregning += (samleverIndkomst - Satser.fpFradragSamlever[år - 2012]); // Indtægt derover indgår fuldt ud i beregningen.
+            samleverIndkomstIndgåriBeregning = Satser.fpFradragSamlever() / 2; //...fradrages halvdelen af ægtefællens/samleverens indtægter op til 201.100 kr.
+            samleverIndkomstIndgåriBeregning += (samleverIndkomst - Satser.fpFradragSamlever()); // Indtægt derover indgår fuldt ud i beregningen.
           }
           else
             samleverIndkomstIndgåriBeregning = samleverIndkomst / 2;
         }
 
-        int fradrag = Math.Max(0, Math.Min(arbejdsindtægt, Satser.fpFradragvArbejde[år - 2012])) + fradragsbeløb;
+        int fradrag = Math.Max(0, Math.Min(arbejdsindtægt, Satser.fpFradragvArbejde())) + fradragsbeløb;
         int beregningsgrundlag = Math.Max(0, (samletIndtægt + samleverIndkomstIndgåriBeregning - fradrag));
         double reduktionsgrad = samleverPensionist ? 0.16 : 0.32;
         int nedsættelse = Convert.ToInt32(beregningsgrundlag * reduktionsgrad);
         pensionstillæg = Math.Max(0, pensionstillæg - nedsættelse);
       }
 
-      int fpFradragvGrundbeløb = Satser.fpFradragvGrundbeløb[år - 2012];
+      int fpFradragvGrundbeløb = Satser.fpFradragvGrundbeløb();
       if (arbejdsindtægt > fpFradragvGrundbeløb)
       {
         int nedsættelse = Convert.ToInt32(0.3 * Convert.ToDouble(arbejdsindtægt - fpFradragvGrundbeløb)); //...af grundbeløb, hvis arbejdsindtægt > [291.200]
@@ -341,18 +320,18 @@ namespace overfoerselsindkomster
       int sats;
       if (alder >= aldersgrænse)
         if (børn > 0) //Fyldt 30, forsørger børn
-          sats = Satser.khOverAldermBørn[år - 2012];
+          sats = Satser.khOverAldermBørn();
         else //Fyldt 30, andre
-          sats = Satser.khOverAlderuBørn[år - 2012];
+          sats = Satser.khOverAlderuBørn();
       else if (børn > 0) //forsøger under 30 år      
         if (enlig) //Enlige forsørgere, under 30 år
-          sats = Satser.khUnderAldermBørnEnlig[år - 2012];
+          sats = Satser.khUnderAldermBørnEnlig();
         else if (ægtefælleKontanthjælp || ægtefælleSU)
           sats = 9498; //Forsørgere under 30 år, gift/bor med person på SU, uddhj. eller kontanthj.
         else
-          sats = Satser.khUnderAldermBørnParPåSU[år - 2012]; //Forsørgere under 30 år, gift/bor med person, der ikke er på SU, uddhj. eller kontanthj.
+          sats = Satser.khUnderAldermBørnParPåSU(); //Forsørgere under 30 år, gift/bor med person, der ikke er på SU, uddhj. eller kontanthj.
       else
-        sats = Satser.khUnderAlderuBørnUdeboende[år - 0212]; //Under 30 år, udeboende, ikke forsørger
+        sats = Satser.khUnderAlderuBørnUdeboende(); //Under 30 år, udeboende, ikke forsørger
 
       //Ikke implementerede satser:
       //Under 30 år, hjemmeboende, ikke forsørger - sats = 3324;
@@ -389,16 +368,16 @@ namespace overfoerselsindkomster
       int kontanthjælp = sats - andenIndkomst - ægtefælleAndenIndkomst; //Ikke-arbejdsrelaterede indtægter fratrækkes
 
       if (arbejdstimer == 0)
-        arbejdstimer = Math.Min(Convert.ToInt32(Convert.ToDouble(arbejdsindkomst) / _khTimesats[år - 1994] * (1 - _skatArbejdsmarkedsbidragssats[år - 1994])), _khMaksTimer); //beregning af arbejdstimer udfra arbejdsindtægt
+        arbejdstimer = Math.Min(Convert.ToInt32(Convert.ToDouble(arbejdsindkomst) / Satser.khTimesats() * (1 - Satser.skatArbejdsmarkedsbidragssats())), Satser.khMaksTimer); //beregning af arbejdstimer udfra arbejdsindtægt
       else
-        arbejdstimer = Math.Min(arbejdstimer, _khMaksTimer);
+        arbejdstimer = Math.Min(arbejdstimer, Satser.khMaksTimer);
 
       if (!enlig)
       {
         if (ægtefælleArbejdstimer == 0)
-          ægtefælleArbejdstimer = Math.Min(Convert.ToInt32(Convert.ToDouble(ægtefælleArbejdsindkomst) / _khTimesats[år - 1994] * (1 - _skatArbejdsmarkedsbidragssats[år - 1994])), _khMaksTimer); //beregning af arbejdstimer udfra arbejdsindtægt
+          ægtefælleArbejdstimer = Math.Min(Convert.ToInt32(Convert.ToDouble(ægtefælleArbejdsindkomst) / Satser.khTimesats() * (1 - Satser.skatArbejdsmarkedsbidragssats())), Satser.khMaksTimer); //beregning af arbejdstimer udfra arbejdsindtægt
         else
-          ægtefælleArbejdstimer = Math.Min(ægtefælleArbejdstimer, _khMaksTimer);
+          ægtefælleArbejdstimer = Math.Min(ægtefælleArbejdstimer, Satser.khMaksTimer);
       }
 
       //Fratrækning af arbejdsindtægter....
@@ -415,13 +394,13 @@ namespace overfoerselsindkomster
 
       int ydelse;
       if (barnetsAlder > 15)
-        ydelse = Satser.Buydelse15_17[år - 2011];
+        ydelse = Satser.Buydelse15_17();
       else if (barnetsAlder > 7)
-        ydelse = Satser.Buydelse7_14[år - 2011];
+        ydelse = Satser.Buydelse7_14();
       else if (barnetsAlder > 3)
-        ydelse = Satser.Buydelse3_6[år - 2011];
+        ydelse = Satser.Buydelse3_6();
       else
-        ydelse = Satser.Buydelse0_2[år - 2011];
+        ydelse = Satser.Buydelse0_2();
 
       if (år < 2014)
         return ydelse; //ingen aftrapning
@@ -484,48 +463,48 @@ namespace overfoerselsindkomster
       if (folkepensionist)
       { //boligydelse
         if (børn < 1) //Maksimumbeløb for den husleje, som kan indgå i boligstøtteberegningen afhænger af antal børn
-          husleje = Math.Min(Satser.bsPensionistMaks0Børn[år - 2012], husleje);
+          husleje = Math.Min(Satser.bsPensionistMaks0Børn(), husleje);
         else if (børn == 1)
-          husleje = Math.Min(Satser.bsPensionistMaks1Børn[år - 2012], husleje);
+          husleje = Math.Min(Satser.bsPensionistMaks1Børn(), husleje);
         else if (børn == 2)
-          husleje = Math.Min(Satser.bsPensionistMaks2Børn[år - 2012], husleje);
+          husleje = Math.Min(Satser.bsPensionistMaks2Børn(), husleje);
         else if (børn == 3)
-          husleje = Math.Min(Satser.bsPensionistMaks3Børn[år - 2012], husleje);
+          husleje = Math.Min(Satser.bsPensionistMaks3Børn(), husleje);
         else //over 3 børn
-          husleje = Math.Min(Satser.bsPensionistMaks4Børn[år - 2012], husleje);
+          husleje = Math.Min(Satser.bsPensionistMaks4Børn(), husleje);
 
 
-        int indkomstgrænse = børn > 1 ? Satser.bsPensionistIndkomstgrænse[år - 2012] + Satser.bsPensionistIndkomstgrænseForhøjelse[år - 2012] * Math.Max(0, Math.Min(4, børn - 1)) : Satser.bsPensionistIndkomstgrænse[år - 2012]; ////Er der mere end 1 barn i husstanden, forhøjes indkomstgrænsen med 38.000 kr. for hvert barn til og med 4 børn.
-        ydelse = Convert.ToInt32(0.75 * (husleje + Satser.bsPensionistTillæg[år - 2012]) - Math.Max(0, 0.225 * (husstandsindkomst - indkomstgrænse))); //Boligydelsen udgør som hovedregel 75 pct. af boligudgiften med et tillæg på 6.100 kr. // Herfra trækkes 22,5 pct. af den del af husstandsindkomsten, der overstiger 144.300 kr. Hvis indtægten er mindre end 144.300 kr., er der ikke noget fradrag for indtægt i boligydelsen.
+        int indkomstgrænse = børn > 1 ? Satser.bsPensionistIndkomstgrænse() + Satser.bsPensionistIndkomstgrænseForhøjelse() * Math.Max(0, Math.Min(4, børn - 1)) : Satser.bsPensionistIndkomstgrænse(); ////Er der mere end 1 barn i husstanden, forhøjes indkomstgrænsen med 38.000 kr. for hvert barn til og med 4 børn.
+        ydelse = Convert.ToInt32(0.75 * (husleje + Satser.bsPensionistTillæg()) - Math.Max(0, 0.225 * (husstandsindkomst - indkomstgrænse))); //Boligydelsen udgør som hovedregel 75 pct. af boligudgiften med et tillæg på 6.100 kr. // Herfra trækkes 22,5 pct. af den del af husstandsindkomsten, der overstiger 144.300 kr. Hvis indtægten er mindre end 144.300 kr., er der ikke noget fradrag for indtægt i boligydelsen.
 
-        ydelse = Convert.ToInt32(Math.Min(ydelse, husleje - Math.Max(Satser.bsMindstebeløb[år - 2012], 0.11 * husstandsindkomst))); //Der skal altid betales et mindstebeløb af ansøger selv. Dette beløb er på 11 pct. af indkomsten, dog mindst 15.300 kr. om året.
+        ydelse = Convert.ToInt32(Math.Min(ydelse, husleje - Math.Max(Satser.bsMindstebeløb(), 0.11 * husstandsindkomst))); //Der skal altid betales et mindstebeløb af ansøger selv. Dette beløb er på 11 pct. af indkomsten, dog mindst 15.300 kr. om året.
 
-        maxYdelse = børn >= 4 ? Convert.ToInt32(Satser.bsPensionistMaxYdelse[år - 2012] * 1.25) : Satser.bsPensionistMaxYdelse[år - 2012]; //Som udgangspunkt kan den årlige boligydelse højst være på 42.720 kr. årligt. Dette beløb hæves til 53.400 kr., hvis der er tale om, at:....
+        maxYdelse = børn >= 4 ? Convert.ToInt32(Satser.bsPensionistMaxYdelse() * 1.25) : Satser.bsPensionistMaxYdelse(); //Som udgangspunkt kan den årlige boligydelse højst være på 42.720 kr. årligt. Dette beløb hæves til 53.400 kr., hvis der er tale om, at:....
         //Det antages at ingen af følgende er opfyldt: Pensionisten har fået anvist en almen bolig af kommunen / – hvis pensionisten er stærkt bevægelseshæmmet, og boligen er egnet / til ansøgers bevægelseshandicap / – pensionisten får døgnhjælp efter servicelovens § 96
         //Det antages endvidere at der ikke er tale om ældrebolig efter den tidligere ældrelov eller en almen bolig, der er anvist af kommunen, er der intet maksimumsbeløb.
       } 
       else if (lejer || førtidspensionist)
       {
         if (børn < 1) //Maksimumbeløb for den husleje, som kan indgå i boligstøtteberegningen afhænger af antal børn
-          husleje = Math.Min(Satser.bsMaks0Børn[år - 2012], husleje);
+          husleje = Math.Min(Satser.bsMaks0Børn(), husleje);
         else if (børn == 1)
-          husleje = Math.Min(Satser.bsMaks1Børn[år - 2012], husleje);
+          husleje = Math.Min(Satser.bsMaks1Børn(), husleje);
         else if (børn == 2)
-          husleje = Math.Min(Satser.bsMaks2Børn[år - 2012], husleje);
+          husleje = Math.Min(Satser.bsMaks2Børn(), husleje);
         else if (børn == 3)
-          husleje = Math.Min(Satser.bsMaks3Børn[år - 2012], husleje);
+          husleje = Math.Min(Satser.bsMaks3Børn(), husleje);
         else //over 3 børn
-          husleje = Math.Min(Satser.bsMaks4Børn[år - 2012], husleje);
+          husleje = Math.Min(Satser.bsMaks4Børn(), husleje);
 
-        int indkomstgrænse = børn > 1 ? Satser.bsIndkomstgrænse[år - 2012] + Satser.bsIndkomstgrænseForhøjelse[år - 2012] * Math.Max(0, Math.Min(4, børn - 1)) : Satser.bsIndkomstgrænse[år - 2012]; //Er der mere end 1 barn i husstanden, forhøjes indkomstgrænsen med 35.200 kr. for hvert barn til og med 4 børn.
+        int indkomstgrænse = børn > 1 ? Satser.bsIndkomstgrænse() + Satser.bsIndkomstgrænseForhøjelse() * Math.Max(0, Math.Min(4, børn - 1)) : Satser.bsIndkomstgrænse(); //Er der mere end 1 barn i husstanden, forhøjes indkomstgrænsen med 35.200 kr. for hvert barn til og med 4 børn.
         ydelse = Convert.ToInt32(0.6 * husleje - Math.Max(0, 0.18 * (husstandsindkomst - indkomstgrænse))); //Boligsikring kan som hovedregel udgøre 60 pct. af boligudgiften. Herfra trækkes 18 pct. af den del af husstandsindkomsten, der overstiger 133.500 kr. Hvis indtægten er mindre end 133.500 kr., er der ikke noget fradrag for indtægt i boligsikringen.
 
         if (børn == 0 && !førtidspensionist)
           ydelse = Convert.ToInt32(Math.Max(0.15 * husleje, ydelse)); //For husstande uden børn kan boligsikringen som hovedregel højst udgøre 15 pct. af huslejen. Denne regel gælder ikke for førtidspensionister.
 
-        ydelse = Math.Min(ydelse, (husleje - Satser.bsMindstebeløb[år - 2012])); //Der skal altid betales et mindstebeløb af ansøger selv. Dette beløb er på 22.500 kr. om året.
+        ydelse = Math.Min(ydelse, (husleje - Satser.bsMindstebeløb())); //Der skal altid betales et mindstebeløb af ansøger selv. Dette beløb er på 22.500 kr. om året.
 
-        maxYdelse = børn >= 4 ? Convert.ToInt32(Satser.bsMaxYdelse[år - 2012] * 1.25) : Satser.bsMaxYdelse[år - 2012]; //Hvis der er fire eller flere børn i husstanden, forhøjes dette beløb med 25 pct., dog maksimalt 49.395 kr
+        maxYdelse = børn >= 4 ? Convert.ToInt32(Satser.bsMaxYdelse() * 1.25) : Satser.bsMaxYdelse(); //Hvis der er fire eller flere børn i husstanden, forhøjes dette beløb med 25 pct., dog maksimalt 49.395 kr
       }
       else
         return 0; //ingen ydelse
@@ -569,7 +548,7 @@ namespace overfoerselsindkomster
       if (!akasse || !indbetaltEfterlønsbidrag || !retTilDagpengeVedLedighed || !tilRådighed || alder < efterlønsalder)
         return 0; //Antages at man har bopæl i Danmark mv. at man har fået indberettet værdien af sin pensionsformue ved opnået efterlønsalder
 
-      int dagpengesats = deltidsforsikret ? Convert.ToInt32(Satser.DpMaksimalSats[år - 2012] * 2/3d) : Satser.DpMaksimalSats[år - 2012]; //deltidsforsinkerede får 2/3 af maksimal sats
+      int dagpengesats = deltidsforsikret ? Convert.ToInt32(Satser.DpMaksimalSats() * 2/3d) : Satser.DpMaksimalSats(); //deltidsforsinkerede får 2/3 af maksimal sats
 
       int efterløn;
       if (født < 1959 && tidligEfterløn)
@@ -578,7 +557,7 @@ namespace overfoerselsindkomster
         efterløn = dagpengesats; //Er man født den 1. januar 1956 eller senere og tidligst går på efterløn 3 år før folkepensionsalderen, er efterlønssatsen maks. 100 pct. af dagpengesatsen i hele efterlønsperioden.
 
       //Modregning:
-      int bundfradrag = Satser.elBundfradrag[år - 2012];
+      int bundfradrag = Satser.elBundfradrag();
 
       //Andre pensionsordninger
       double andenPensioniBeregning = andenPension * 0.05;
